@@ -1,0 +1,15 @@
+{
+  "name": "jukeyman",
+  "version": "1.0.0",
+  "description": "JUKEYMAN AI Agents Store",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "stripe": "^12.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^12.0.0"
+  }
+} 

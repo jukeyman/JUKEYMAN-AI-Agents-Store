@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUKEYMAN - AI Agents Store</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        :root {
+            --neon-text-color: #f40;
+            --neon-border-color: #08f;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 136, 255, 0.1) 0%, transparent 60%),
+                radial-gradient(circle at 85% 15%, rgba(255, 68, 0, 0.1) 0%, transparent 55%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 4em;
+            text-align: center;
+            text-transform: uppercase;
+            animation: flicker 1.5s infinite alternate;
+            color: var(--neon-text-color);
+            text-shadow: 0 0 7px #fff,
+                         0 0 10px #fff,
+                         0 0 21px #fff,
+                         0 0 42px var(--neon-text-color),
+                         0 0 82px var(--neon-text-color),
+                         0 0 92px var(--neon-text-color),
+                         0 0 102px var(--neon-text-color),
+                         0 0 151px var(--neon-text-color);
+            margin-bottom: 1em;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .product {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--neon-border-color);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 136, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .product:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 30px var(--neon-border-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .product img {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 136, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .product:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 136, 255, 0.5);
+        }
+
+        .product h2 {
+            color: #fff;
+            margin: 15px 0;
+            font-size: 1.8em;
+            text-shadow: 0 0 10px var(--neon-border-color);
+        }
+
+        .product p {
+            color: #ccc;
+            margin: 15px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .price {
+            font-size: 2em;
+            color: var(--neon-text-color);
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 0 10px var(--neon-text-color);
+        }
+
+        button {
+            background: var(--neon-text-color);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            background: #fff;
+            color: var(--neon-text-color);
+            box-shadow: 0 0 20px var(--neon-text-color);
+            transform: scale(1.05);
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow: 0 0 7px #fff,
+                            0 0 10px #fff,
+                            0 0 21px #fff,
+                            0 0 42px var(--neon-text-color),
+                            0 0 82px var(--neon-text-color),
+                            0 0 92px var(--neon-text-color),
+                            0 0 102px var(--neon-text-color),
+                            0 0 151px var(--neon-text-color);
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 3em;
+            }
+            .product {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JUKEYMAN</h1>
+        <div class="products" id="products">
+            <!-- Products will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_51OWvWzCE5G3sz3HsZBvLhWxwLHQAgxkPSxlXm6Yj9YgzYygsGCNwAXxgxjBqHJqEOfOA3KpxGHjWUwTwT6SbgDpX00J4k4JZLV');
+
+        // Product data
+        const products = [
+            {
+                id: 'python_agent',
+                name: 'Supreme Quantum Python Entity',
+                description: 'A revolutionary Python-powered entity designed for developers, scientists, and innovators. This Jukeyman transcends programming boundaries, delivering quantum-optimized solutions.',
+                price: 599.99,
+                image: 'https://jukeyman.com/wp-content/uploads/jukeyman-agents/DALL·E 2024-12-11 03.09.55 - Create a futuristic humanoid agent representing Python, designed with sleek metallic finishes and glowing accents in shades of blue and green, symboli.webp'
+            },
+            {
+                id: 'java_agent',
+                name: 'Supreme Quantum Java Entity',
+                description: 'A next-generation Java entity tailored for developers and enterprises. This Jukeyman empowers users to craft scalable, adaptive applications.',
+                price: 699.99,
+                image: 'https://jukeyman.com/wp-content/uploads/jukeyman-agents/DALL·E 2024-12-11 03.10.26 - A futuristic humanoid agent representing Java, depicted in a sleek, innovative environment. The agent should embody adaptability and scalability, wear.webp'
+            },
+            {
+                id: 'cpp_agent',
+                name: 'Supreme Quantum C++ Entity',
+                description: 'An unparalleled C++ entity for engineers and developers aiming to achieve peak performance and efficiency.',
+                price: 749.99,
+                image: 'https://jukeyman.com/wp-content/uploads/jukeyman-agents/DALL·E 2024-12-11 03.13.45 - A futuristic humanoid agent representing C++, depicted as a sleek and advanced robotic figure surrounded by elements symbolizing computational efficie.webp'
+            }
+        ];
+
+        // Load products
+        function loadProducts() {
+            const productsContainer = document.getElementById('products');
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product';
+                productElement.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                    <h2>${product.name}</h2>
+                    <p>${product.description}</p>
+                    <div class="price">$${product.price}</div>
+                    <button onclick="handlePurchase('${product.id}')">Buy Now</button>
+                `;
+                productsContainer.appendChild(productElement);
+            });
+        }
+
+        // Handle purchase
+        async function handlePurchase(productId) {
+            try {
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Processing...';
+
+                const response = await fetch('/.netlify/functions/create-checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        productId: productId
+                    })
+                });
+
+                const session = await response.json();
+                
+                if (session.error) {
+                    console.error('Server error:', session.error);
+                    alert('Error: ' + session.error);
+                    button.disabled = false;
+                    button.textContent = 'Buy Now';
+                    return;
+                }
+                
+                // Redirect to Stripe checkout
+                const result = await stripe.redirectToCheckout({
+                    sessionId: session.id
+                });
+
+                if (result.error) {
+                    console.error('Stripe error:', result.error);
+                    alert(result.error.message);
+                    button.disabled = false;
+                    button.textContent = 'Buy Now';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Something went wrong. Please try again.');
+                button.disabled = false;
+                button.textContent = 'Buy Now';
+            }
+        }
+
+        // Load products when page loads
+        window.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html> 
